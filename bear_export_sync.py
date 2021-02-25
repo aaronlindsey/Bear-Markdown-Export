@@ -37,7 +37,7 @@ or leave list empty for all notes: `limit_export_to_tags = []`
 * Or export as textbundles with images included 
 '''
 
-make_tag_folders = True  # Exports to folders using first tag only, if `multi_tag_folders = False`
+make_tag_folders = False  # Exports to folders using first tag only, if `multi_tag_folders = False`
 multi_tag_folders = True  # Copies notes to all 'tag-paths' found in note!
                           # Only active if `make_tag_folders = True`
 hide_tags_in_comment_block = True  # Hide tags in HTML comments: `<!-- #mytag -->`
@@ -163,7 +163,7 @@ def check_db_modified():
 def export_markdown():
     with sqlite3.connect(bear_db) as conn:
         conn.row_factory = sqlite3.Row
-        query = "SELECT * FROM `ZSFNOTE` WHERE `ZTRASHED` LIKE '0' AND `ZARCHIVED` LIKE '0'"
+        query = "SELECT * FROM `ZSFNOTE` WHERE `ZTRASHED` LIKE '0' AND `ZARCHIVED` LIKE '0' AND `ZENCRYPTED` LIKE '0'"
         c = conn.execute(query)
     note_count = 0
     for row in c:
