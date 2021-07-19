@@ -440,6 +440,9 @@ def rsync_files_from_temp():
                              '--exclude', 'BearImages/',
                              '--exclude', '.Ulysses*',
                              '--exclude', '*.Ulysses_Public_Filter',
+                             '--exclude', '.git*',
+                             '--exclude', '.vscode',
+                             '--exclude', '.obsidian',
                              temp_path + "/", dest_path])
         else:
             subprocess.call(['rsync', '-r', '-t', '-E',
