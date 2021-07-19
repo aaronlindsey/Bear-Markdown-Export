@@ -40,7 +40,7 @@ or leave list empty for all notes: `limit_export_to_tags = []`
 make_tag_folders = False  # Exports to folders using first tag only, if `multi_tag_folders = False`
 multi_tag_folders = True  # Copies notes to all 'tag-paths' found in note!
                           # Only active if `make_tag_folders = True`
-hide_tags_in_comment_block = True  # Hide tags in HTML comments: `<!-- #mytag -->`
+hide_tags_in_comment_block = False  # Hide tags in HTML comments: `<!-- #mytag -->`
 
 # The following two lists are more or less mutually exclusive, so use only one of them.
 # (You can use both if you have some nested tags where that makes sense)
@@ -343,7 +343,7 @@ def hide_tags(md_text):
     if hide_tags_in_comment_block:
         md_text =  re.sub(r'(\n)[ \t]*(\#[^\s#].*)', r'\1<!-- \2 -->', md_text)
     else:
-        md_text =  re.sub(r'(\n)[ \t]*(\#[^\s#]+)', r'\1. \2', md_text)
+        md_text =  re.sub(r'(\n)[ \t]*(\#[^\s#]+)', r'\1\2', md_text)
     return md_text
 
 
@@ -352,7 +352,7 @@ def restore_tags(md_text):
     # if hide_tags_in_comment_block:
     md_text =  re.sub(r'(\n)<!--[ \t]*(\#[^\s#].*?) -->', r'\1\2', md_text)
     # else:
-    md_text =  re.sub(r'(\n)\.[ \t]*(\#[^\s#]+)', r'\1\2', md_text)
+    # md_text =  re.sub(r'(\n)\.[ \t]*(\#[^\s#]+)', r'\1\2', md_text)
     return md_text
 
 
@@ -579,7 +579,7 @@ def update_bear_note(md_text, md_file, ts, ts_last_export):
     return
 
 
-def get_tag_from_path(md_text, md_file, root_path, inbox_for_root=True, extra_tag=''):
+def get_tag_from_path(md_text, md_file, root_path, inbox_for_root=False, extra_tag=''):
     # extra_tag should be passed as '#tag' or '#space tag#'
     path = md_file.replace(root_path, '')[1:]
     sub_path = os.path.split(path)[0]
