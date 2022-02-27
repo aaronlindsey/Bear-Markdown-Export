@@ -459,6 +459,7 @@ def rsync_files_from_temp():
         if delete:
             subprocess.call(['rsync', '-r', '-t', '-E', '--delete',
                              '--exclude', 'BearImages/',
+                             '--exclude', 'BearAttachments/',
                              '--exclude', '.Ulysses*',
                              '--exclude', '*.Ulysses_Public_Filter',
                              '--exclude', '.git*',
