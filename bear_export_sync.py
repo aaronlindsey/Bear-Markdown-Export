@@ -630,13 +630,15 @@ def get_tag_from_path(md_text, md_file, root_path, inbox_for_root=False, extra_t
 
 
 def get_file_tags(md_file):
-    try:
-        subprocess.call([gettag_sh, md_file, gettag_txt])
-        text = re.sub(r'\\n\d{1,2}', r'', read_file(gettag_txt))
-        tag_list = json.loads(text)
-        return tag_list
-    except:
-        return []
+    # APL: Disabling this since I don't use Finder tags.
+    # try:
+    #     subprocess.call([gettag_sh, md_file, gettag_txt])
+    #     text = re.sub(r'\\n\d{1,2}', r'', read_file(gettag_txt))
+    #     tag_list = json.loads(text)
+    #     return tag_list
+    # except:
+    #     return []
+    return []
 
 
 def bear_x_callback(x_command, md_text, message, orig_title):
