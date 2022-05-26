@@ -4,7 +4,7 @@
 # Developed with Visual Studio Code with MS Python Extension.
 
 '''
-# Markdown export from Bear sqlite database 
+# Markdown export from Bear sqlite database
 Version 1.4, 2020-01-11
 modified by: github/andymatuschak, andy_matuschak@twitter
 original author: github/rovest, rorves@twitter
@@ -13,28 +13,28 @@ See also: bear_import.py for auto import to bear script.
 
 ## Sync external updates:
 First checks for changes in external Markdown files (previously exported from Bear)
-* Replacing text in original note with callback-url replace command   
+* Replacing text in original note with callback-url replace command
   (Keeping original creation date)
   If changes in title it will be added just below original title
 * New notes are added to Bear (with x-callback-url command)
 * New notes get tags from sub folder names, or `#.inbox` if root
-* Backing up original note as file to BearSyncBackup folder  
+* Backing up original note as file to BearSyncBackup folder
   (unless a sync conflict, then both notes will be there)
 
 ## Export:
 Then exporting Markdown from Bear sqlite db.
 * check_if_modified() on database.sqlite to see if export is needed
-* Uses rsync for copying, so only markdown files of changed sheets will be updated  
+* Uses rsync for copying, so only markdown files of changed sheets will be updated
   and synced by Dropbox (or other sync services)
-* "Hides" tags with `period+space` on beginning of line: `. #tag` not appear as H1 in other apps.   
+* "Hides" tags with `period+space` on beginning of line: `. #tag` not appear as H1 in other apps.
   (This is removed if sync-back above)
 * Or instead hide tags in HTML comment blocks like: `<!-- #mytag -->` if `hide_tags_in_comment_block = True`
 * Makes subfolders named with first tag in note if `make_tag_folders = True`
 * Files can now be copied to multiple tag-folders if `multi_tags = True`
-* Export can now be restricted to a list of spesific tags: `limit_export_to_tags = ['bear/github', 'writings']`  
+* Export can now be restricted to a list of spesific tags: `limit_export_to_tags = ['bear/github', 'writings']`
 or leave list empty for all notes: `limit_export_to_tags = []`
 * Can export and link to images in common image repository
-* Or export as textbundles with images included 
+* Or export as textbundles with images included
 '''
 
 make_tag_folders = False  # Exports to folders using first tag only, if `multi_tag_folders = False`
@@ -46,13 +46,13 @@ hide_tags_in_comment_block = False  # Hide tags in HTML comments: `<!-- #mytag -
 # (You can use both if you have some nested tags where that makes sense)
 # Also, they only work if `make_tag_folders = True`.
 only_export_these_tags = []  # Leave this list empty for all notes! See below for sample
-# only_export_these_tags = ['bear/github', 'writings'] 
+# only_export_these_tags = ['bear/github', 'writings']
 
 export_as_textbundles = False  # Exports as Textbundles with images included
 export_as_hybrids = True  # Exports as .textbundle only if images included, otherwise as .md
                           # Only used if `export_as_textbundles = True`
-export_image_repository = True  # Export all notes as md but link images to 
-                                 # a common repository exported to: `assets_path` 
+export_image_repository = True  # Export all notes as md but link images to
+                                 # a common repository exported to: `assets_path`
                                  # Only used if `export_as_textbundles = False`
 
 import os
@@ -87,12 +87,12 @@ parsed_args = vars(parser.parse_args())
 
 set_logging_on = True
 
-# NOTE! if 'BearNotes' is left blank, all other files in my_sync_service will be deleted!! 
+# NOTE! if 'BearNotes' is left blank, all other files in my_sync_service will be deleted!!
 export_path = parsed_args.get("out")
 no_export_tags = parsed_args.get("excludeTag")  # If a tag in note matches one in this list, it will not be exported.
 
 # NOTE! "export_path" is used for sync-back to Bear, so don't change this variable name!
-multi_export = [(export_path, True)]  # only one folder output here. 
+multi_export = [(export_path, True)]  # only one folder output here.
 # Use if you want export to severa places like: Dropbox and OneDrive, etc. See below
 # Sample for multi folder export:
 # export_path_aux1 = os.path.join(HOME, 'OneDrive', 'BearNotes')
@@ -193,7 +193,7 @@ def export_markdown():
                 # print(filepath)
                 if export_as_textbundles:
                     if check_image_hybrid(md_text):
-                        make_text_bundle(md_text, filepath, mod_dt)                        
+                        make_text_bundle(md_text, filepath, mod_dt)
                     else:
                         write_file(filepath + '.md', md_text, mod_dt)
                 elif export_image_repository:
@@ -217,14 +217,14 @@ def check_image_hybrid(md_text):
 
 def make_text_bundle(md_text, filepath, mod_dt):
     '''
-    Exports as Textbundles with images included 
+    Exports as Textbundles with images included
     '''
     bundle_path = filepath + '.textbundle'
-    assets_path = os.path.join(bundle_path, 'assets')    
+    assets_path = os.path.join(bundle_path, 'assets')
     if not os.path.exists(bundle_path):
         os.makedirs(bundle_path)
         os.makedirs(assets_path)
-        
+
     info = '''{
     "transient" : true,
     "type" : "net.daringfireball.markdown",
@@ -295,13 +295,13 @@ def sub_path_from_tag(temp_path, filename, md_text):
                 return []
         if tag.startswith('.'):
             # Avoid hidden path if it starts with a '.'
-            sub_path = '_' + tag[1:]     
+            sub_path = '_' + tag[1:]
         else:
-            sub_path = tag    
+            sub_path = tag
         tag_path = os.path.join(temp_path, sub_path)
         if not os.path.exists(tag_path):
             os.makedirs(tag_path)
-        paths.append(os.path.join(tag_path, filename))      
+        paths.append(os.path.join(tag_path, filename))
     return paths
 
 
@@ -343,7 +343,7 @@ def restore_image_links(md_text):
 
 def copy_bear_images():
     # Image files copied to a common image repository
-    subprocess.call(['rsync', '-r', '-t', '--delete', 
+    subprocess.call(['rsync', '-r', '-t', '--delete',
                     bear_image_path + "/", assets_path])
 
 def copy_bear_files():
@@ -382,7 +382,7 @@ def clean_title(title):
     if title == "":
         title = "Untitled"
     title = re.sub(r'[/\\*?$@!^&\|~:\.]', r'-', title)
-    title = re.sub(r'-$', r'', title)    
+    title = re.sub(r'-$', r'', title)
     return title.strip()
 
 
@@ -416,7 +416,7 @@ def dt_conv(dtnum):
 
 
 def date_time_conv(dtnum):
-    newnum = dt_conv(dtnum) 
+    newnum = dt_conv(dtnum)
     dtdate = datetime.datetime.fromtimestamp(newnum)
     #print(newnum, dtdate)
     return dtdate.strftime(' - %Y-%m-%d_%H%M')
@@ -424,7 +424,7 @@ def date_time_conv(dtnum):
 
 def time_stamp_ts(ts):
     dtdate = datetime.datetime.fromtimestamp(ts)
-    return dtdate.strftime('%Y-%m-%d at %H:%M') 
+    return dtdate.strftime('%Y-%m-%d at %H:%M')
 
 
 def date_conv(dtnum):
@@ -446,7 +446,7 @@ def delete_old_temp_files():
 
 def rsync_files_from_temp():
     # Moves markdown files to new folder using rsync:
-    # This is a very important step! 
+    # This is a very important step!
     # By first exporting all Bear notes to an emptied temp folder,
     # rsync will only update destination if modified or size have changed.
     # So only changed notes will be synced by Dropbox or OneDrive destinations.
@@ -504,10 +504,12 @@ def sync_md_updates():
                     else:
                         update_bear_note(md_text, md_file, ts, ts_last_export)
                         write_log('Bear Note Updated: ' + md_file)
+        # APL: only import files from the first iteration of os.walk (the top level of export_path)
+        break
     if updates_found:
         # Give Bear time to process updates:
         time.sleep(3)
-        # Check again, just in case new updates synced from remote (OneDrive/Dropbox) 
+        # Check again, just in case new updates synced from remote (OneDrive/Dropbox)
         # during this process!
         # The logic is not 100% fool proof, but should be close to 99.99%
         sync_md_updates() # Recursive call
@@ -522,7 +524,7 @@ def check_if_image_added(md_text, md_file):
         'F89CDA3D-3FCC-4E92-88C1-CC4AF46FA733-10097-00002BBE9F7FF804_IMG_2280.JPG'
         if not re.match(r'[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}-[0-9A-F]{3,5}-[0-9A-F]{16}_', image_match):
             return True
-    return False        
+    return False
 
 
 def textbundle_to_bear(md_text, md_file, mod_dt):
@@ -535,7 +537,7 @@ def textbundle_to_bear(md_text, md_file, mod_dt):
         md_text = re.sub(r'\<\!-- ?\{BearID\:' + uuid + r'\} ?--\>', '', md_text).rstrip() + '\n'
         md_text = insert_link_top_note(md_text, 'Images added! Link to original note: ', uuid)
     else:
-        # New textbundle (with images), add path as tag: 
+        # New textbundle (with images), add path as tag:
         md_text = get_tag_from_path(md_text, bundle, export_path)
     write_file(md_file, md_text, mod_dt)
     os.utime(bundle, (-1, mod_dt))
@@ -582,12 +584,12 @@ def update_bear_note(md_text, md_file, ts, ts_last_export):
             link_original = 'bear://x-callback-url/open-note?id=' + uuid
             message = '::Sync conflict! External update: ' + time_stamp_ts(ts) + '::'
             message += '\n[Click here to see original Bear note](' + link_original + ')'
-            x_create = 'bear://x-callback-url/create?show_window=no&open_note=no' 
-            bear_x_callback(x_create, md_text, message, '')   
+            x_create = 'bear://x-callback-url/create?show_window=no&open_note=no'
+            bear_x_callback(x_create, md_text, message, '')
         else:
             # Regular external update
             orig_title = backup_bear_note(uuid)
-            # message = '::External update: ' + time_stamp_ts(ts) + '::'   
+            # message = '::External update: ' + time_stamp_ts(ts) + '::'
             x_replace = 'bear://x-callback-url/add-text?show_window=no&open_note=no&mode=replace&id=' + uuid
             bear_x_callback(x_replace, md_text, '', orig_title)
             # # Trash old original note:
@@ -595,10 +597,10 @@ def update_bear_note(md_text, md_file, ts, ts_last_export):
             # subprocess.call(["open", x_trash])
             # time.sleep(.2)
     else:
-        # New external md Note, since no Bear uuid found in text: 
-        # message = '::New external Note - ' + time_stamp_ts(ts) + '::' 
+        # New external md Note, since no Bear uuid found in text:
+        # message = '::New external Note - ' + time_stamp_ts(ts) + '::'
         md_text = get_tag_from_path(md_text, md_file, export_path)
-        x_create = 'bear://x-callback-url/create?show_window=no' 
+        x_create = 'bear://x-callback-url/create?show_window=no'
         bear_x_callback(x_create, md_text, '', '')
     return
 
@@ -610,7 +612,7 @@ def get_tag_from_path(md_text, md_file, root_path, inbox_for_root=False, extra_t
     tags = []
     if '.textbundle' in sub_path:
         sub_path = os.path.split(sub_path)[0]
-    if sub_path == '': 
+    if sub_path == '':
         if inbox_for_root:
             tag = '#.inbox'
         else:
@@ -619,15 +621,15 @@ def get_tag_from_path(md_text, md_file, root_path, inbox_for_root=False, extra_t
         tag = '#.' + sub_path[1:].strip()
     else:
         tag = '#' + sub_path.strip()
-    if ' ' in tag: 
-        tag += "#"               
-    if tag != '': 
+    if ' ' in tag:
+        tag += "#"
+    if tag != '':
         tags.append(tag)
     if extra_tag != '':
         tags.append(extra_tag)
     for tag in get_file_tags(md_file):
         tag = '#' + tag.strip()
-        if ' ' in tag: tag += "#"                   
+        if ' ' in tag: tag += "#"
         tags.append(tag)
     return md_text.strip() + '\n\n' + ' '.join(tags) + '\n'
 
@@ -655,7 +657,7 @@ def bear_x_callback(x_command, md_text, message, orig_title):
         if title != orig_title:
             md_text = '\n'.join(lines)
         else:
-            md_text = '\n'.join(lines[1:])        
+            md_text = '\n'.join(lines[1:])
     x_command_text = x_command + '&text=' + urllib.parse.quote(md_text)
     subprocess.call(["open", "-g", x_command_text])
     time.sleep(.2)
@@ -695,7 +697,7 @@ def backup_bear_note(uuid):
         filename = clean_title(title) + dtdate.strftime(' - %Y-%m-%d_%H%M')
         if not os.path.exists(sync_backup):
             os.makedirs(sync_backup)
-        file_part = os.path.join(sync_backup, filename) 
+        file_part = os.path.join(sync_backup, filename)
         # This is a Bear text file, not exactly markdown.
         backup_file = file_part + ".txt"
         count = 2
@@ -712,8 +714,8 @@ def backup_bear_note(uuid):
 def insert_link_top_note(md_text, message, uuid):
     lines = md_text.split('\n')
     title = re.sub(r'^#{1,6} ', r'', lines[0])
-    link = '::' + message + '[' + title + '](bear://x-callback-url/open-note?id=' + uuid + ')::'        
-    lines.insert(1, link) 
+    link = '::' + message + '[' + title + '](bear://x-callback-url/open-note?id=' + uuid + ')::'
+    lines.insert(1, link)
     return '\n'.join(lines)
 
 
@@ -732,7 +734,7 @@ def init_gettag_script():
         os.makedirs(temp)
     write_file(gettag_sh, gettag_script, 0)
     subprocess.call(['chmod', '777', gettag_sh])
-    
+
 
 def notify(message):
     title = "ul_sync_md.py"
@@ -743,7 +745,7 @@ def notify(message):
         subprocess.call(['/Applications/terminal-notifier.app/Contents/MacOS/terminal-notifier',
                          '-message', message, "-title", title, '-sound', 'default'])
     except:
-        write_log('"terminal-notifier.app" is missing!')        
+        write_log('"terminal-notifier.app" is missing!')
     return
 
 
