@@ -465,8 +465,8 @@ def rsync_files_from_temp():
                              '--exclude', '.git*',
                              '--exclude', '.vscode',
                              '--exclude', '.obsidian',
+                             '--exclude', 'Tools',
                              '--exclude', 'Private',
-                             '--exclude', '.scripts',
                              temp_path + "/", dest_path])
         else:
             subprocess.call(['rsync', '-r', '-t', '-E',
