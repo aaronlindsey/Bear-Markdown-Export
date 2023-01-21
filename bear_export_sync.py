@@ -42,12 +42,6 @@ multi_tag_folders = True  # Copies notes to all 'tag-paths' found in note!
                           # Only active if `make_tag_folders = True`
 hide_tags_in_comment_block = False  # Hide tags in HTML comments: `<!-- #mytag -->`
 
-# The following two lists are more or less mutually exclusive, so use only one of them.
-# (You can use both if you have some nested tags where that makes sense)
-# Also, they only work if `make_tag_folders = True`.
-only_export_these_tags = []  # Leave this list empty for all notes! See below for sample
-# only_export_these_tags = ['bear/github', 'writings']
-
 export_as_textbundles = False  # Exports as Textbundles with images included
 export_as_hybrids = True  # Exports as .textbundle only if images included, otherwise as .md
                           # Only used if `export_as_textbundles = True`
@@ -81,6 +75,7 @@ parser.add_argument("--images", default=None, help="Path where images will be st
 parser.add_argument("--attachments", default=None, help="Path where attachments will be stored")
 parser.add_argument("--skipImport", action="store_const", const=True, default=False, help="When present, the script only exports from Bear to Markdown; it skips the import step.")
 parser.add_argument("--excludeTag", action="append", default=[], help="Don't export notes with this tag. Can be used multiple times.")
+parser.add_argument("--includeTag", action="append", default=[], help="Only export notes with this tag. Can be used multiple times.")
 
 parsed_args = vars(parser.parse_args())
 
@@ -89,7 +84,13 @@ set_logging_on = True
 
 # NOTE! if 'BearNotes' is left blank, all other files in my_sync_service will be deleted!!
 export_path = parsed_args.get("out")
+
 no_export_tags = parsed_args.get("excludeTag")  # If a tag in note matches one in this list, it will not be exported.
+only_export_tags = parsed_args.get("includeTag")
+
+# The script does not currently support exporting images or attachments if only exporting specific tags.
+if no_export_tags or only_export_tags:
+    export_image_repository = False
 
 # NOTE! "export_path" is used for sync-back to Bear, so don't change this variable name!
 multi_export = [(export_path, True)]  # only one folder output here.
@@ -166,6 +167,25 @@ def check_db_modified():
     return db_ts > last_export_ts
 
 
+def should_export(md_text):
+    md_tags = get_tags(md_text)
+    # if any of the file's tags are in the blacklist, don't export
+    for no_tag in no_export_tags:
+        for md_tag in md_tags:
+            if md_tag.lower().startswith(no_tag.lower()):
+                return False
+    # if a whitelist of tags is given, only export the file if at least one of its tags is in the whitelist
+    if only_export_tags:
+        for export_tag in only_export_tags:
+            for md_tag in md_tags:
+                if md_tag.lower().startswith(export_tag.lower()):
+                    return True
+        return False
+    # otherwise, if no blacklist or whitelist is given just export the file
+    else:
+        return True
+
+
 def export_markdown():
     with sqlite3.connect(bear_db) as conn:
         conn.row_factory = sqlite3.Row
@@ -182,7 +202,7 @@ def export_markdown():
         file_list = []
         if make_tag_folders:
             file_list = sub_path_from_tag(temp_path, filename, md_text)
-        else:
+        elif should_export(md_text):
             file_list.append(os.path.join(temp_path, filename))
         if file_list:
             mod_dt = dt_conv(modified)
@@ -245,26 +265,34 @@ def make_text_bundle(md_text, filepath, mod_dt):
     os.utime(bundle_path, (-1, mod_dt))
 
 
+TAG_PATTERN_1 = r'(?<!\S)\#([.\w\/\-]+)[ \n]?(?!([\/ \w]+\w[#]))'
+TAG_PATTERN_2 = r'(?<![\S])\#([^ \d][.\w\/ ]+?)\#([ \n]|$)'
+
+
+def get_tags(md_text):
+    tags = []
+    for matches in re.findall(TAG_PATTERN_1, md_text):
+        tag = matches[0]
+        tags.append(tag)
+    for matches2 in re.findall(TAG_PATTERN_2, md_text):
+        tag2 = matches2[0]
+        tags.append(tag2)
+    return tags
+
+
+# TODO refactor this to combine with should_export
 def sub_path_from_tag(temp_path, filename, md_text):
     # Get tags in note:
-    pattern1 = r'(?<!\S)\#([.\w\/\-]+)[ \n]?(?!([\/ \w]+\w[#]))'
-    pattern2 = r'(?<![\S])\#([^ \d][.\w\/ ]+?)\#([ \n]|$)'
     if multi_tag_folders:
         # Files copied to all tag-folders found in note
-        tags = []
-        for matches in re.findall(pattern1, md_text):
-            tag = matches[0]
-            tags.append(tag)
-        for matches2 in re.findall(pattern2, md_text):
-            tag2 = matches2[0]
-            tags.append(tag2)
+        tags = get_tags(md_text)
         if len(tags) == 0:
             # No tags found, copy to root level only
             return [os.path.join(temp_path, filename)]
     else:
         # Only folder for first tag
-        match1 =  re.search(pattern1, md_text)
-        match2 =  re.search(pattern2, md_text)
+        match1 = re.search(TAG_PATTERN_1, md_text)
+        match2 = re.search(TAG_PATTERN_2, md_text)
         if match1 and match2:
             if match1.start(1) < match2.start(1):
                 tag = match1.group(1)
@@ -282,9 +310,9 @@ def sub_path_from_tag(temp_path, filename, md_text):
     for tag in tags:
         if tag == '/':
             continue
-        if only_export_these_tags:
+        if only_export_tags:
             export = False
-            for export_tag in only_export_these_tags:
+            for export_tag in only_export_tags:
                 if tag.lower().startswith(export_tag.lower()):
                     export = True
                     break
