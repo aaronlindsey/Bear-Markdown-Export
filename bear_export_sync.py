@@ -657,8 +657,14 @@ def get_tag_from_path(md_text, md_file, root_path, inbox_for_root=False, extra_t
         tags.append(extra_tag)
     for tag in get_file_tags(md_file):
         tag = '#' + tag.strip()
-        if ' ' in tag: tag += "#"
+        if ' ' in tag: tag += '#'
         tags.append(tag)
+    existing_file_tags = get_tags(md_text)
+    for tag in only_export_tags:
+        if tag not in existing_file_tags:
+            tag = '#' + tag.strip()
+            if ' ' in tag: tag += '#'
+            tags.append(tag)
     return md_text.strip() + '\n\n' + ' '.join(tags) + '\n'
 
 
